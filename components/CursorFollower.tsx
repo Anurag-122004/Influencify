@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Position {
   x: number;
@@ -8,9 +8,10 @@ interface Position {
 }
 
 export function CursorFollower() {
-  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [mousePosition, setMousePosition] = useState<Position>({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState<boolean>(true);
+  const position = useRef<Position>({ x: 0, y: 0 }); // ✅ Use ref to store position
+  const [, forceRender] = useState({}); // To trigger occasional re-renders
 
   useEffect(() => {
     const updateMousePosition = (e: MouseEvent) => {
@@ -21,13 +22,8 @@ export function CursorFollower() {
       setIsVisible(true);
     };
 
-    const handleMouseLeave = () => {
-      setIsVisible(false);
-    };
-
-    const handleMouseEnter = () => {
-      setIsVisible(true);
-    };
+    const handleMouseLeave = () => setIsVisible(false);
+    const handleMouseEnter = () => setIsVisible(true);
 
     window.addEventListener("mousemove", updateMousePosition);
     document.addEventListener("mouseleave", handleMouseLeave);
@@ -44,23 +40,23 @@ export function CursorFollower() {
     let animationFrameId: number;
 
     const animateCircle = () => {
-      const dx = mousePosition.x - position.x;
-      const dy = mousePosition.y - position.y;
+      const dx = mousePosition.x - position.current.x;
+      const dy = mousePosition.y - position.current.y;
 
-      setPosition({
-        x: position.x + dx * 0.2,
-        y: position.y + dy * 0.2,
-      });
+      position.current = {
+        x: position.current.x + dx * 0.2,
+        y: position.current.y + dy * 0.2,
+      };
+
+      forceRender({}); // ✅ Only trigger occasional re-renders
 
       animationFrameId = requestAnimationFrame(animateCircle);
     };
 
     animationFrameId = requestAnimationFrame(animateCircle);
 
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [mousePosition, position]);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [mousePosition]); // ✅ Remove `position` dependency
 
   return (
     <div
@@ -68,8 +64,8 @@ export function CursorFollower() {
         isVisible ? "opacity-100" : "opacity-0"
       }`}
       style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
+        left: `${position.current.x}px`,
+        top: `${position.current.y}px`,
       }}
     />
   );
