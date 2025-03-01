@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 import { useSchematicEntitlement } from "@schematichq/schematic-react";
 import { FeatureFlag } from "@/features/flag";
